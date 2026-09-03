@@ -203,3 +203,63 @@ erDiagram
     Tricycle     ||--o{ Assignment  : utilized_for
     FleetManager ||--o{ Assignment  : assigns
 ```
+
+## Processing Ontology files
+
+Ontology files will be processed in such a way that ensures that duplicate keys that define relationships are never overwritten but are properly detected and preserved.
+
+```
+YAML
+ │
+ ▼
+Raw Ontology
+ │
+ ▼
+Duplicate-key Preservation
+ │
+ ▼
+Relationship Reconciliation
+ │
+ ├── Rider -- works_for --> Company
+ │       ↕
+ │   Company -- employer_of --> Rider
+ │
+ ├── FleetOwner -- owns --> Company
+ │       ↕
+ │   Company -- property_of --> FleetOwner
+ │
+ └── Assignment -- utilizes --> Rider
+         +
+     Assignment -- utilizes --> Tricycle
+ │
+ ▼
+Canonical Ontology Graph
+ │
+ ├──────────────┬───────────────┐
+ ▼              ▼               ▼
+OpenAPI     JSON Model      SQLite / MySQL / PostgreSQL schemas
+```
+
+Therefore, the duplicate key for the `Assignment` and `Rider` relationship in the ontology now becomes:
+
+```yaml
+properties:
+  utilizes_rider:
+    $ref: '#/components/schemas/Rider'
+
+  utilizes_tricycle:
+    $ref: '#/components/schemas/Tricycle'
+```
+
+And the duplicate key for the `Company` and `FleetManager` relationship in the ontology now becomes:
+
+```yaml
+properties:
+  employer_of_fleet_manager:
+    $ref: '#/components/schemas/FleetManager'
+
+  employer_of_rider:
+    type: array
+    items:
+      $ref: '#/components/schemas/Rider'
+```
