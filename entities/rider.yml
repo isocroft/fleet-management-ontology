@@ -10,8 +10,11 @@ entity:
       type: uuid
       unique: true
 
-    status:
-      type: RiderStatus
+    state:
+      type: RiderState
+
+    notice:
+      type: RiderNotice
 
   relationships:
 
