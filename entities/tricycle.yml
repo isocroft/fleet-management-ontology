@@ -27,8 +27,8 @@ entity:
       type: double
       constraint: [PRECISION: 10, 2]
   
-    status:
-      type: TricycleStatus
+    state:
+      type: TricycleState
 
     condition:
       type: TricycleCondition
