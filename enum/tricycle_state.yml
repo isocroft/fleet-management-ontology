@@ -1,5 +1,5 @@
 enum:
-  name: TricycleStatus
+  name: TricycleState
 
   values:
     - in_service
