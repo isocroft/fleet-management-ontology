@@ -1,8 +1,8 @@
 ontology:
-  name: Tricycle Rider Relationship ontology
+  name: Fleet Management ontology
 
   description: >
-    An ontology map showing the properties and relationships between companies, tricycle, riders, fleet_managers and fleet_owners in a fleet management system
+    An ontology map showing the properties and relationships between companies, tricycle, riders, assignments, fleet_managers, trips and fleet_owners in a fleet management system
 
   entities:
     - Company
@@ -12,11 +12,16 @@ ontology:
     - FleetOwner
     - FleetManager
     - Assignment
+    - Trip
 
   enums:
     - TricycleCondition 
-    - TricycleStatus 
+    - TricycleState
+    - TricycleEnergySource
     - FleetOwnerStatus
     - FleetManagerStatus
     - CompanyStatus
-    - RiderStatus
+    - AssignmentState
+    - AssignmentPhase
+    - RiderState
+    - RiderNotice
