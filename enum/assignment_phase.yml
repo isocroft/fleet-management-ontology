@@ -1,0 +1,7 @@
+enum:
+  name: AssignmentPhase
+
+  values:
+    - on_trip
+    - idle
+    - stalled
