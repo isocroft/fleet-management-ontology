@@ -1,0 +1,7 @@
+enum:
+  name: AssignmentState
+
+  values:
+    - expired
+    - valid
+    - indeterminate
