@@ -10,12 +10,15 @@ entity:
       type: uuid
       unique: true
 
-    started_at:
-      type: datetime
+    starts_at:
+      type: datetime # not nullable 
 
-    ended_at:
-      type: datetime # null = assignment still active and not ended
+    ends_at:
+      type: datetime # null = assignment still valid and does not expire
 
+    phase:
+      type: AssignmentPhase
+      
   relationships:
 
     assigned_by:
