@@ -10,15 +10,23 @@ entity:
       type: uuid
       unique: true
 
-    plate_number:
+    license_plate_number:
       type: string
       unique: true
       constraint: [REGEX:/^[A-Z]{3}[-]([0-9][0-9][1-9])[A-Z]{2}$/]
 
-    engine_number:
+    vehicle_identification_number:
       type: string
       unique: true
+      constraint: [REGEX: /^[A-Z0-9]{17}$/]
 
+    fuel_type:
+      type: TricycleEnergySource
+
+    capacity_kg:
+      type: double
+      constraint: [PRECISION: 10, 2]
+  
     status:
       type: TricycleStatus
 
