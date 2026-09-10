@@ -1,0 +1,7 @@
+enum:
+  name: TricycleEnergySource
+
+  values:
+    - petrol
+    - diesel
+    - electric
