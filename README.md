@@ -228,23 +228,23 @@ erDiagram
 
 ```mermaid
 graph TD
-    subgraph fleet [Fleet Operations Context]
+    subgraph fleet [Fleet Operation Context]
         D[Rider Entity]
         V[Vehicle / Tricycle Entity]
         A[Assignment Aggregate]
     end 
 
-    subgraph telematics [Telematics Context]
+    subgraph telematics [Telematics Aggregation Context]
         GT[GPS Tracking Stream Entity]
         RT[Route Telemetry Log Aggregate]
     end
 
-    subgraph maintenance [Maintenance Context]
+    subgraph maintenance [Fleet Maintenance Context]
         ISR[Inspection Service Request Entity]
         WO[Work Order Log Aggregate]
     end
 
-    subgraph dispatch [Dispatch Context]
+    subgraph dispatch [Dispatch Fulfillment Context]
         DR[Dispatch Request Entity]
         RP[Route Plan Entity]
         TR[Trip Aggregate]
@@ -280,6 +280,87 @@ graph TD
 - Fleet Super (`ACTOR_ADMIN`): Oversees fleet registration, user role access control, driver registration/licensing records, and overall fleet system configurations.
 
 - Fleet Client (`ACTOR_CUSTOMER`): Creates dispatch requests and uses a tracking-id to ensure service completion.
+
+## Laravel Project Folder Structure (By Feature a.k.a Business Domains)
+
+```
+app/
+  ├── Core/        # Shared or global code used across features
+  |   ├── Shared/
+  │   |   ├── Http/
+  │   │   ├── Middleware/ 
+  │   │   └── Kernel.php
+  │   |   ├── Providers/  # Custom Providers
+  |   |   ├── Extensions/ # Extensions for wrapping third-party deps (Dependency Inversion)
+  │   |   └── Macros/     # Shared macros for response object
+  |   ├── Notification/
+  |   |   ├── Jobs/
+  |   |       ├── ProcessAsEmail.php
+  |   |       └── ProcessAsSMS.php
+  |   ├── resources/
+  |   |   ├── view_partials/
+  |   |   └── .gitkeep
+  |   └── helpers.php
+  |
+  ├── Features/     # Your Business Domains
+  │   ├── FleetOperation/        # FEATURE: FleetOperation
+  │   │   ├── Controllers/
+  │   │   │   └── FleetOperationController.php
+  │   │   ├── Models/
+  |   |   |   ├── Assignment.php
+  |   |   |   ├── Rider.php
+  │   │   │   └── Vehicle.php
+  │   │   ├── Requests/
+  |   |   |   ├── CreateRiderProfileRequest.php
+  │   │   │   └── UpdateRiderProfileRequest.php
+  │   │   ├── Services/
+  |   |   |   ├── RiderRegistrationService.php
+  │   │   │   └── VehicleRegistrationService.php
+  │   │   ├── Listeners/
+  |   |   |   ├── BroadcastRiderRegistered.php
+  │   │   │   └── BroadcastVehicleRegistered.php
+  │   │   ├── Actions/
+  |   |   |   ├── RiderSuspension.php
+  |   |   |   ├── VehicleRetirement.php
+  │   │   │   └── AssignmentReallocation.php
+  |   |   ├── views/   # Optional: feature-specific views
+  │   │   └── routes.php  # Feature-specific routes starting with '/api/v1/fleet'
+  │   │
+  │   ├── DispatchFulfillment/       # FEATURE: DispatchFulfillment
+  │   │   ├── Controllers/
+  │   │   │   └── DispatchFulfillmentController.php
+  │   │   ├── Models/
+  |   |   |   ├── DispatchRequest.php
+  │   │   │   └── Trip.php
+  │   │   ├── Requests/
+  |   |   |   ├── DispatchSubmissionRequest.php
+  |   |   |   ├── TripCancelRequest.php
+  │   │   │   └── TripScheduleRequest.php
+  │   │   ├── Listeners/
+  |   |   |   ├── BroadcastDispatchRequestSubmitted.php
+  │   │   │   └── BroadcastTripScheduled.php
+  │   │   ├── Actions/
+  │   │   │   └── TripCancellation.php    # `TripCancellation` action triggers the `AssignmentReallocation` action in an event-driven manner as a side-effect
+  |   |   ├── views/    # Optional: feature-specific views
+  │   │   └── routes.php   # Feature-specific routes starting with '/api/v1/dispatch'
+  │   │
+  │   └── FleetMaintenance/       # FEATURE: FleetMaintenance
+  │       ├── Controllers/
+  |       |   └── FleetMaintenanceController.php
+  │       ├── Models/
+  |       |   ├── WorkOrderLog.php
+  |       |   └── InspectionServiceRequest.php
+  │       ├── Actions/
+  |       |   ├── WorkOrderApproval.php
+  │       │   └── WorkOrderRejection.php
+  |       ├── views/ # Optional: feature-specific views
+  │       └── route.php    # Feature-specific routes starting with '/api/v1/maintenance'    
+  │
+  ├── Middleware/     # Laravel default middlewares
+  └── Providers/      # Laravel default service providers
+```
+  
+## Interaction Sequences
 
 >How a **Trip** is managed
 ```mermaid
