@@ -3,5 +3,5 @@ enum:
 
   values:
     - on_trip
-    - idle
+    - queued
     - stalled
