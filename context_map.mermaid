@@ -1,0 +1,28 @@
+graph TD
+    subgraph fleet [Fleet Operations Context]
+        D[Rider Entity]
+        V[Vehicle / Tricycle Entity]
+        A[Assignment Aggregate]
+    end 
+
+    subgraph telematics [Telematics Context]
+        GT[GPS Tracking Stream Entity]
+        RT[Route Telemetry Log Aggregate]
+    end
+
+    subgraph maintenance [Maintenance Context]
+        SR[Inspection Service Record Entity]
+        WO[Work Order Log Aggregate]
+    end
+
+    subgraph dispatch [Dispatch Context]
+        DR[Dispatch Request Entity]
+        RP[Route Plan Entity]
+        TR[Trip Aggregate]
+    end
+
+    %% Clean connection syntax using short IDs
+    dispatch -->|Creates And Updates Assignments On-Demand & Updates Rider Availability| fleet
+    telematics -->|Tracks Telemetry Data For All Valid Assignments| fleet
+    telematics -->|Update Trip Status Using Incoming Telemetry Data| dispatch
+    maintenance -->|Updates Vehicle Availability| fleet
