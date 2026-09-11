@@ -1,0 +1,12 @@
+# Define language attributes for YAML, Mermaid, and API Blueprint files
+
+# YAML files
+*.yml       linguist-language=YAML
+*.yaml      linguist-language=YAML
+
+# Mermaid diagram files
+*.mmd       linguist-language=Mermaid
+*.mermaid   linguist-language=Mermaid
+
+# API Blueprint files
+*.apib      linguist-language=API-Blueprint
