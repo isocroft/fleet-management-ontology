@@ -1,21 +1,21 @@
 graph TD
-    subgraph fleet [Fleet Operations Context]
+    subgraph fleet [Fleet Operation Context]
         D[Rider Entity]
         V[Vehicle / Tricycle Entity]
         A[Assignment Aggregate]
     end 
 
-    subgraph telematics [Telematics Context]
+    subgraph telematics [Telematics Aggregation Context]
         GT[GPS Tracking Stream Entity]
         RT[Route Telemetry Log Aggregate]
     end
 
-    subgraph maintenance [Maintenance Context]
+    subgraph maintenance [Fleet Maintenance Context]
         ISR[Inspection Service Request Entity]
         WO[Work Order Log Aggregate]
     end
 
-    subgraph dispatch [Dispatch Context]
+    subgraph dispatch [Dispatch Fulfillment Context]
         DR[Dispatch Request Entity]
         RP[Route Plan Entity]
         TR[Trip Aggregate]
