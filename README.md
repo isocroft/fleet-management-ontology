@@ -39,9 +39,12 @@ The sections below list each entity's properties and the relationships that star
 ## Layout
 
 ```
-ontology.yml        the manifest: lists every entity and enum
-entities/           one file per entity
-enum/               one file per enum
+ontology.yml                the root manifest: lists every entity and enum
+blueprint.apib              the root blueprint: depicts the shape of every public-facing API
+context_map.mermaid         the map of every bounded context (or vertical slice)
+relationship_map.mermaid    the map of the relationship between all entities
+entities/                   one file per entity
+enum/                       one file per enum
 ```
 
 ## The core idea behind this ontology
@@ -74,7 +77,7 @@ A person's information. A person could be a rider and/or fleet owner and/or flee
 | first_name   | string |        |
 | last_name    | string |        |
 | email        | string | unique |
-| phone_number | string |        |
+| phone_number | string | unique |
 | address      | string |        |
 
 - `can_be_basic_employee` → **Rider** (zero..one) `in_service_of` → **Company** (zero..one)
@@ -133,7 +136,7 @@ A rider is a person that is employed by a fleet company. A rider can be employed
 | Property | Type        |        |
 | -------- | ----------- | ------ |
 | id       | uuid        | unique |
-| status   | RiderStatus |        |
+| state    | RiderState  |        |
 
 - `is` → **Person** (one)
 - `operates` → **Tricycle** (one) `in_service_of` → **Assignment** (one)
@@ -151,7 +154,7 @@ A tricycle belongs to a company's fleet and is assigned to riders over time.
 | license_plate_number            | string              | unique                                  |
 | vehicle_identificationn_number  | string              | unique                                  |
 | capacity_kg                     | double              | what is the load capacity               |
-| status                          | TricycleStatus      | what is the service state               |
+| state                           | TricycleState       | what is the service state               |
 | condition                       | TricycleCondition   | what is the mechanical health           |
 | fuel_type                       | TricycleEnergySource| what energy source does it use for power|
 
@@ -170,11 +173,12 @@ A combination of the **status** and the **condition** (as concurrent states) det
 
 Assignment links a company's tricycle to one of its riders at a point in time. A rider can only be assigned to one tricycle at a time. An assignment is `assinged_by` the fleet manager of the fleet owner. It is meant to serve as audit data in the future.
 
-| Property   | Type     |                                             |
-| ---------- | -------- | ------------------------------------------- |
-| id         | uuid     | unique                                      |
-| started_at | datetime | `not null`                                  |
-| ended_at   | datetime | `null` means the assignment is still active |
+| Property   | Type            |                                             |
+| ---------- | --------------- | ------------------------------------------- |
+| id         | uuid            | unique                                      |
+| starts_at  | datetime        | `not null`                                  |
+| ends_at    | datetime        | `null` means the assignment is still valid  |
+| phase      | AssignmentPhase |                                             |
 
 - `utilizes` → **Rider** (one) `in_service_of` → **Company** (one)
 - `property_of` → **Company** (one)
@@ -187,31 +191,40 @@ Because a rider and a tricycle each have **many** assignments, this entity is wh
 
 | Enum                 | Values                                |
 | -------------------- | ------------------------------------- |
-| RiderStatus          | active, inactive, suspended           |
+| RiderNotice          | active, inactive, suspended           |
+| RiderState           | booked, busy, idle                    |
 | FleetOwnerStatus     | active, inactive, suspended           |
 | FleetManagerStatus   | active, inactive, suspended           |
 | CompanyStatus        | active, shutdown                      |
-| TricycleStatus       | in_service, idle, impounded, retired  |
+| TricycleState        | in_service, idle, impounded, retired  |
 | TricycleCondition    | operable, needs_repair, fully_damaged |
 | TricycleEnergySource | petrol, diesel, electric              |
+| AssignmentPhase      | on_trip, queued, stalled              |
+| AssignmentState      | expired, valid, indeterminate.        |
+| TripStatus           | scheduled, in_progress, cancelled     |
 
-## The relationship map
+## The Relationship Map
 
 ```mermaid
 erDiagram
-    Person       ||--o| Rider       : can_be_basic_employee
-    Person       ||--o| FleetOwner  : can_be_owner
-    Person       ||--o| FleetManager: can_be_manager_employee
-    FleetOwner   ||--o{ Company     : owns
-    FleetManager ||--o| Company     : employed_by
-    Company      ||--o{ Tricycle    : owns
-    Company      |o--o{ Rider       : employer_of
-    Rider        ||--o{ Assignment  : utilized_for
-    Tricycle     ||--o{ Assignment  : utilized_for
-    FleetManager ||--o{ Assignment  : assigns
+    Person         ||--o| Rider       : can_be_basic_employee
+    Person         ||--o| FleetOwner  : can_be_owner
+    Person         ||--o| FleetManager: can_be_manager_employee
+    Person         ||--o| Customer    : can_be_customer_user
+    FleetOwner     ||--o{ Company     : owns
+    FleetManager   ||--o| Company     : employed_by
+    Company        ||--o{ Tricycle    : owns
+    Company        |o--o{ Rider       : employer_of
+    Rider          ||--o{ Assignment  : utilized_for
+    Tricycle       ||--o{ Assignment  : utilized_for
+    FleetManager   ||--o{ Assignment  : assigns
+    FleetManager   ||--o{ Trip : schedules
+    Customer       ||--o{ DispatchRequest : creates
+    DispatchRequest||--o{ Trip : utilized_for
+    Assignment     ||--o{ Trip : utilized_for 
 ```
 
-## The context map
+## The Context Map
 
 ```mermaid
 graph TD
@@ -219,7 +232,7 @@ graph TD
         D[Rider Entity]
         V[Vehicle / Tricycle Entity]
         A[Assignment Aggregate]
-    end
+    end 
 
     subgraph telematics [Telematics Context]
         GT[GPS Tracking Stream Entity]
@@ -227,20 +240,20 @@ graph TD
     end
 
     subgraph maintenance [Maintenance Context]
-        SR[Inspection Service Record Entity]
+        ISR[Inspection Service Request Entity]
         WO[Work Order Log Aggregate]
     end
 
     subgraph dispatch [Dispatch Context]
-        
         DR[Dispatch Request Entity]
         RP[Route Plan Entity]
         TR[Trip Aggregate]
     end
 
     %% Clean connection syntax using short IDs
-    dispatch -->|Assigns Vehicle & Rider| fleet
-    telematics -->|Streams Geolocation| fleet
+    dispatch -->|Creates And Updates Assignments On-Demand & Updates Rider Availability| fleet
+    telematics -->|Tracks Telemetry Data For All Valid Assignments| fleet
+    telematics -->|Update Trip Status Using Incoming Telemetry Data| dispatch
     maintenance -->|Updates Vehicle Availability| fleet
 ```
 
@@ -260,13 +273,15 @@ graph TD
 
 - Fleet Manager (`ACTOR_MANAGER`): Manages trip schedules, routes, vehicle assignments, and real-time trip monitoring.
 
-- Rider (`ACTOR_RIDER`): Executes assigned trips, submits vehicle inspection logs, and updates live location/status.
+- Fleet Rider (`ACTOR_RIDER`): Executes assigned trips, submits vehicle inspection logs, and updates live location/status.
 
-- Maintenance Technician (`ACTOR_TECHNICIAN`): Conducts inspections, executes work orders, logs maintenance costs, and manages vehicle service status.
+- Maintenance Technician (`ACTOR_TECH`): Conducts inspections, executes work orders, logs maintenance costs, and manages vehicle service status.
 
-- Fleet Owner (`ACTOR_ADMIN`): Oversees fleet registration, user role access control, driver licensing records, and overall fleet system configurations.
+- Fleet Super (`ACTOR_ADMIN`): Oversees fleet registration, user role access control, driver registration/licensing records, and overall fleet system configurations.
 
+- Fleet Client (`ACTOR_CUSTOMER`): Creates dispatch requests and uses a tracking-id to ensure service completion.
 
+>How a **Trip** is managed
 ```mermaid
 sequenceDiagram
     autonumber
@@ -276,18 +291,81 @@ sequenceDiagram
     participant TripMod as "Dispatch Context"
     actor Rider as "Fleet Rider"
 
-    Manager->>API: POST /api/v1/dispatch/trips (Can assign Tricycle/Vehicle with Rider on-the-fly or use pre-assignments)
-    API->>FleetMod: Query Vehicle Status (Is Available?)
-    FleetMod-->>API: Vehicle Status: Available
-    API->>TripMod: Save Trip Record (Status: SCHEDULED)
+    Manager->>API: POST /api/v1/dispatch/trips?dispatch_request_id=xxx (Can assign Tricycle to a Rider on-demand or use existing queued assignments)
+    API->>FleetMod: GET /api/v1/fleet/assignments?status=ready (Query Assignments By Status: Is Ready?)
+    FleetMod->>API: 200 OK (List of Assignments That Are Ready: No Assignments Ready)
+    API->>FleetMod: GET /api/v1/fleet/vehicles?status=available (Query Vehicles By Status: Is Available?)
+    FleetMod->>API: 200 OK (List of Vehicles That Are Available: One Vehicle is Available)
+    API->>FleetMod: GET /api/v1/fleet/riders?status=available (Query Riders By Status: Is Available?)
+    FleetMod->>API: 200 OK (List of Riders That Are Available: Two Riders are Available)
+    API->>FleetMod: POST /api/v1/fleet/assignments
+    FleetMod->>API: 201 Created (Assignment Phase is QUEUED)
+    API->>TripMod: Save/Create Trip Record  (Status: SCHEDULED)
     TripMod-->>API: Trip ID Created
     API-->>Manager: 201 Created (Trip Scheduled)
 
     Rider->>API: PATCH /api/v1/dispatch/trips/{tripId}/status (Status is currently SCHEDULED)
     API->>TripMod: Update Trip Status to IN_PROGRESS
-    API->>FleetMod: Update Assignment Status to ON_TRIP
+    API->>FleetMod: Update Assignment Phase to ON_TRIP
     TripMod-->>API: Trip Updated
     API-->>Rider: 200 OK (Trip In Progress)
+```
+
+>How a **Dispatch Request** is created
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as "Fleet Client"
+    participant API as "Gateway / HTTP API"
+    participant TripMod as "Dispatch Context"
+
+
+    Customer->>API: POST /api/v1/dispatch/requests (Saved Request info will be used to create a Trip subsequently)
+    API->>TripMod: Save/Create Request Record (Status: PENDING)
+    TripMod-->>API: 201 Created (Request Saved)
+```
+
+>How a **Dispatch Request** is cancelled
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as "Fleet Client"
+    participant API as "Gateway / HTTP API"
+    participant TripMod as "Dispatch Context"
+
+
+    Customer->>API: PATCH /api/v1/dispatch/requests/{requestId}/status (Status is currently PENDING)
+    API->>TripMod: Update Dispatch Request Record (Status: CANCELLED)
+    TripMod-->>API: 200 OK (Request Updated)
+```
+
+>How a **Maintenance Tech** handles an inspection service request
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Tech as "Maintenance Technician"
+    participant API as "Gateway / HTTP API"
+    participant OrderMod as "Maintenance Context"
+    participant FleetMod as "Fleet Operations Context"
+    actor Rider as "Fleet Rider"
+
+    Rider->>API: POST /api/v1/maintenance/requests/{vehicleId} (Multiple inspection Requests can be made for the same vehicle at the same time)
+    API->>FleetMod: Check Vehicle State (Must not be IMPOUNDED) And Update Vehicle Condition (NEEDS_REPAIR)
+    API->>OrderMod: Save/Create Inspection Service Request Record (Status: PENDING)
+    OrderMod-->>API: 201 Created (Request Updated)
+
+    Tech->>API: GET /api/v1/maintenance/requests (Fetch All)
+    API->>OrderMod: Fetch All
+    OrderMod-->>API: 200 OK (List of Requests)
+
+    Note over Tech: 🧺 PAUSE FOR OFFLINE CHORES 🧺
+    Note over Tech: • Perform Inspection
+    Note over Tech: • Recreate Defect Via Record Meta 
+    Note over Tech: • Flag Maintenance Defect
+    
+    Tech->>API: POST /api/v1/maintenance/work-orders (Submit Work Order Record)
+    API->>OrderMod: Save/Create Work Order Record And Await Approval (Status: PENDING)
+    OrderMod-->>API: 201 Created (Record Logged)
 ```
 
 ## Processing Ontology files
@@ -315,11 +393,11 @@ Relationship Reconciliation
  │   Company -- property_of --> FleetOwner
  │
  └── Assignment -- utilizes --> Rider
-         +
-     Assignment -- utilizes --> Tricycle
+ |       +
+ |  Assignment -- utilizes --> Tricycle
  │
  ▼
-Canonical Ontology Graph with Context Map & Sequences (Mermaid) + Activities (UML)
+Canonical Relationship Graph with Context Map & Sequences (Mermaid) + Activities (UML)
  │
  ├──────────────┬───────────────┐
  ▼              ▼               ▼
