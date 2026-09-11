@@ -1,0 +1,96 @@
+FORMAT: 1A
+HOST: https://live.fleetr.com/api/v1
+
+# Fleet Management API
+This is an API built using **API Blueprint** to demonstrate managing fleet operations, dispatch and maintenance hosted on [Fleet.com API](http://developers.fleetr.com/reference).
+
+NOTE: This document is a **work in progress**.
+
+## Group Users
+Resources related to fleet operation management.
+
+### Fleet Operation Workflows [/fleet]
+
+#### List All Vehicles [GET /fleet/vehicles{?limit,page,status,type}]
+Retrieve a paginated list of registered vehicles.
+
++ Parameters
+    + limit: 10 (number, optional) - The maximum number of users to return.
+    + page: 1 (number, optional) - The page number to fetch.
+    + status: "available", "occupied" (enum, optional) - The status of the vehicle
+    + type: "tricycle", "van" (enum, optional) - The type of the vehicle
+
++ Response 200 (application/json)
+    + Attributes (array[Vehicle])
+
+#### Register a Vehicle [POST /fleet/vehicles]
+Register a new vehicle in the system.
+
++ Request (application/json)
+    + Attributes
+        + vin: `1N084995TNE986SIZN49930` (string, required) - Vehicle Identification Number.
+        + licence_plate_number: `ABC-234-TY` (string, required) - Plate Number.
+
++ Response 211 (application/json)
+    + Attributes (Vehicle)
+
++ Response 400 (application/json)
+    + Header
+        Retry-After: 230
+    + Body
+        {
+            "error": "Email address already registered."
+        }
+
+
+## Group Dsipatches
+Resources related to managing dispatches.
+
+### Dispatch Operations Workflow [POST /dispatch/trips]
+
++ Parameters
+    + dispatch_request_id: `12345` (string, required) - The unique identifier of the task.
+
+#### View Task Details [GET]
+Returns detailed information about a specific task.
+
++ Response 200 (application/json)
+    + Attributes (Trip)
+
++ Response 404 (application/json)
+    + Headers
+        Set-Cookie: last_request_status=error_transient; HttpOnly; Path=/; Secure; SameSite=Lax; Expires=
+        Vary: User-Agent, Accept
+    + Body
+        {
+            "error": "Task not found."
+        }
+
+#### Update Task [PUT]
+Modify the status or details of an existing task.
+
++ Request (application/json)
+    + Attributes
+        + title: `Buy groceries` (string, optional)
+        + is_completed: true (boolean, required)
+
++ Response 200 (application/json)
+    + Attributes (Task)
+
+#### Delete Task [DELETE]
+Permanently remove a task from the system.
+
++ Response 204
+
+
+### Data Structures
+
+### Vehicle (object)
++ id: `usr_987` (string, required) - Unique identifier for the user.
++ vin: `Jane Doe` (string, required) - The user's name.
++ license_plate_number: `jane.doe@example.com` (string, required)
+
+### Trip (object)
++ dispatch_request_id: `tsk_123` (string, required) - Unique identifier for the task.
++ assignment_id: `Finish documentation` (string, required) - Title of the task.
++ status: false (boolean, required) - Completion state.
