@@ -1,0 +1,7 @@
+enum:
+  name: TripStatus
+
+  values:
+    - scheduled
+    - in_progress
+    - cancelled
