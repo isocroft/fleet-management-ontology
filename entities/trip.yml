@@ -1,0 +1,24 @@
+entity:
+  name: Trip
+
+  description: >
+    A trip is scheduled by a fleet manager or automatically by the system. A trip is fulfilled when a dispatch request is serviced by an assignment.
+
+  properties:
+
+    id:
+      type: uuid
+      unique: true
+
+    status:
+      type: TripStatus
+
+  relationships:
+
+    utilizes:
+      target: Assignment
+      cardinality: one
+
+    utilizes:
+      target: DispatchRequest
+      cardinality: one
