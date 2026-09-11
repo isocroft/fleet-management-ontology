@@ -1,0 +1,16 @@
+erDiagram
+    Person         ||--o| Rider       : can_be_basic_employee
+    Person         ||--o| FleetOwner  : can_be_owner
+    Person         ||--o| FleetManager: can_be_manager_employee
+    Person         ||--o| Customer    : can_be_customer_user
+    FleetOwner     ||--o{ Company     : owns
+    FleetManager   ||--o| Company     : employed_by
+    Company        ||--o{ Tricycle    : owns
+    Company        |o--o{ Rider       : employer_of
+    Rider          ||--o{ Assignment  : utilized_for
+    Tricycle       ||--o{ Assignment  : utilized_for
+    FleetManager   ||--o{ Assignment  : assigns
+    FleetManager   ||--o{ Trip : schedules
+    Customer       ||--o{ DispatchRequest : creates
+    DispatchRequest||--o{ Trip : utilized_for
+    Assignment     ||--o{ Trip : utilized_for 
