@@ -2,7 +2,7 @@
 
 An ontology map showing the properties and relationships between companies, tricycles, riders, fleet owners and fleet managers in a fleet management system.
 
-It is a set of YAML files each file describing one entity or one enum, and together they define the shape of the domain.
+It is a set of YAML and MERMAID files. Each YAML file describing one entity or one enum, and together they define the shape of the domain.
 
 ## What is an ontology?
 
@@ -284,80 +284,232 @@ graph TD
 ## Laravel Project Folder Structure (By Feature a.k.a Business Domains)
 
 ```
-app/
-  ├── Core/        # Shared or global code used across features
-  |   ├── Shared/
-  │   |   ├── Http/
-  │   │   ├── Middleware/ 
-  │   │   └── Kernel.php
-  │   |   ├── Providers/  # Custom Providers
-  |   |   ├── Extensions/ # Extensions for wrapping third-party deps (Dependency Inversion)
-  │   |   └── Macros/     # Shared macros for response object
-  |   ├── Notification/
-  |   |   ├── Jobs/
-  |   |       ├── ProcessAsEmail.php
-  |   |       └── ProcessAsSMS.php
-  |   ├── resources/
-  |   |   ├── view_partials/
+ project-root/
+  ├── app/
+  |   ├── Core/        # Shared or global code used across features
+  |   |   ├── Shared/
+      │   |   ├── Http/
+      |   |   |   ├── Controllers/
+      |   |   |   |   └── AuthController.php
+      │   │   |   ├── Middleware/ # Custom middlewares + All Laravel v11+ default middlewares
+      │   │   |   └── Kernel.php
+      │   |   ├── Providers/  # Custom Shared Providers
+      |   |   |   └── BusinessDomainServiceProvider.php
+      |   |   ├── Extensions/ # Extensions for wrapping third-party deps (Dependency Inversion)
+      │   |   ├── Models/   # Shared Models
+      |   |   |   └── User.php 
+      |   |   └── Notification/
+      |   |       ├── Jobs/
+      |   |       |   ├── ProcessAsEmail.php
+      |   |       |   └── ProcessAsSMS.php
+      |   |       └── .gitkeep
+      |   ├── database/
+      |   |   ├── seeders/
+      |   |   ├── migrations/
+      |   |   ├── factories/
+      |   |   └── .gitkeep
+      |   ├── config/
+      |   |   ├── app.php
+      |   |   ├── session.php
+      |   |   ├── database.php
+      |   |   └── queue.php
+      |   ├── resources/
+      |   |   ├── views/
+      |   |   ├── css/
+      |   |   ├── js/
+      |   |   └── .gitkeep
+      |   └── helpers.php
+      |
+      ├── Features/     # All Business Domains
+      │   ├── FleetOperation/        # FEATURE: FleetOperation
+      │   │   ├── Controllers/
+      │   │   │   └── FleetOperationController.php
+      │   │   ├── Models/
+      |   |   |   ├── Assignment.php
+      |   |   |   ├── Manager.php
+      |   |   |   ├── Rider.php
+      │   │   │   └── Vehicle.php
+      │   │   ├── Requests/
+      |   |   |   ├── CreateRiderProfileRequest.php
+      │   │   │   └── UpdateRiderProfileRequest.php
+      │   │   ├── Services/
+      |   |   |   ├── RiderRegistrationService.php
+      │   │   │   └── VehicleRegistrationService.php
+      │   │   ├── Listeners/
+      |   |   |   ├── BroadcastRiderRegistered.php
+      │   │   │   └── BroadcastVehicleRegistered.php
+      │   │   ├── Actions/
+      |   |   |   ├── RiderSuspension.php
+      |   |   |   ├── VehicleRetirement.php
+      │   │   │   └── AssignmentReallocation.php
+      |   |   ├── views/   # Optional: feature-specific views
+      │   │   └── routes/
+      |   |       └── api.php  # Feature-specific routes starting with '/api/v1/fleet'
+      │   │
+      │   ├── DispatchFulfillment/       # FEATURE: DispatchFulfillment
+      │   │   ├── Controllers/
+      │   │   │   └── DispatchFulfillmentController.php
+      │   │   ├── Models/
+      |   |   |   ├── DispatchRequest.php
+      |   |   |   ├── Customer.php
+      │   │   │   └── Trip.php
+      │   │   ├── Requests/
+      |   |   |   ├── DispatchSubmissionRequest.php
+      |   |   |   ├── TripCancelRequest.php
+      │   │   │   └── TripScheduleRequest.php
+      │   │   ├── Listeners/
+      |   |   |   ├── BroadcastDispatchRequestSubmitted.php
+      │   │   │   └── BroadcastTripScheduled.php
+      │   │   ├── Actions/
+      │   │   │   └── TripCancellation.php    # `TripCancellation` action triggers the `AssignmentReallocation` action in an event-driven manner as a side-effect
+      |   |   ├── views/    # Optional: feature-specific views
+      │   │   └── routes/
+      |   |       └── api.php   # Feature-specific routes starting with '/api/v1/dispatch'
+      │   │
+      │   ├── FleetMaintenance/       # FEATURE: FleetMaintenance
+      │   |   ├── Controllers/
+      |   |   |   └── FleetMaintenanceController.php
+      │   |   ├── Models/
+      |   |   |   ├── WorkOrderLog.php
+      |   |   |   └── InspectionServiceRequest.php
+      │   |   ├── Actions/
+      |   |   |   ├── WorkOrderApproval.php
+      │   |   │   └── WorkOrderRejection.php
+      |   |   ├── views/ # Optional: feature-specific views
+      │   |   └── routes/
+      |   |       └── api.php    # Feature-specific routes starting with '/api/v1/maintenance'    
+      │   |
+      |   ├── TelemanticsAggregation/  # FEATURE: TelemanticsAggregation
+      |   |   ├── Controllers/
+      |   |   |   └── TelemanticsAggregationController.php
+  |   |   |   ├── Models/
+  |   |   |   |   └── DisptachRouteTelemetry.php
+  |   |   |   ├── Actions/
+  |   |   |
   |   |   └── .gitkeep
-  |   └── helpers.php
+  |   └── Providers/      # Laravel v11+ default service providers
+  |       └── AppServiceProvider.php
   |
-  ├── Features/     # Your Business Domains
-  │   ├── FleetOperation/        # FEATURE: FleetOperation
-  │   │   ├── Controllers/
-  │   │   │   └── FleetOperationController.php
-  │   │   ├── Models/
-  |   |   |   ├── Assignment.php
-  |   |   |   ├── Rider.php
-  │   │   │   └── Vehicle.php
-  │   │   ├── Requests/
-  |   |   |   ├── CreateRiderProfileRequest.php
-  │   │   │   └── UpdateRiderProfileRequest.php
-  │   │   ├── Services/
-  |   |   |   ├── RiderRegistrationService.php
-  │   │   │   └── VehicleRegistrationService.php
-  │   │   ├── Listeners/
-  |   |   |   ├── BroadcastRiderRegistered.php
-  │   │   │   └── BroadcastVehicleRegistered.php
-  │   │   ├── Actions/
-  |   |   |   ├── RiderSuspension.php
-  |   |   |   ├── VehicleRetirement.php
-  │   │   │   └── AssignmentReallocation.php
-  |   |   ├── views/   # Optional: feature-specific views
-  │   │   └── routes.php  # Feature-specific routes starting with '/api/v1/fleet'
-  │   │
-  │   ├── DispatchFulfillment/       # FEATURE: DispatchFulfillment
-  │   │   ├── Controllers/
-  │   │   │   └── DispatchFulfillmentController.php
-  │   │   ├── Models/
-  |   |   |   ├── DispatchRequest.php
-  │   │   │   └── Trip.php
-  │   │   ├── Requests/
-  |   |   |   ├── DispatchSubmissionRequest.php
-  |   |   |   ├── TripCancelRequest.php
-  │   │   │   └── TripScheduleRequest.php
-  │   │   ├── Listeners/
-  |   |   |   ├── BroadcastDispatchRequestSubmitted.php
-  │   │   │   └── BroadcastTripScheduled.php
-  │   │   ├── Actions/
-  │   │   │   └── TripCancellation.php    # `TripCancellation` action triggers the `AssignmentReallocation` action in an event-driven manner as a side-effect
-  |   |   ├── views/    # Optional: feature-specific views
-  │   │   └── routes.php   # Feature-specific routes starting with '/api/v1/dispatch'
-  │   │
-  │   └── FleetMaintenance/       # FEATURE: FleetMaintenance
-  │       ├── Controllers/
-  |       |   └── FleetMaintenanceController.php
-  │       ├── Models/
-  |       |   ├── WorkOrderLog.php
-  |       |   └── InspectionServiceRequest.php
-  │       ├── Actions/
-  |       |   ├── WorkOrderApproval.php
-  │       │   └── WorkOrderRejection.php
-  |       ├── views/ # Optional: feature-specific views
-  │       └── route.php    # Feature-specific routes starting with '/api/v1/maintenance'    
-  │
-  ├── Middleware/     # Laravel default middlewares
-  └── Providers/      # Laravel default service providers
+  ├── routes/
+  |   ├── web.php
+  |   ├── api.php
+  |   └── console.php
+  |
+  ├── bootstrap/
+  |   └── app.php # Laravel v11+ initialization point 
+  |
+  ├── public/ 
+  |   └── index.php  # Laravel v11+ entry point  (OPENTELEMETRY: https://github.com/open-telemetry/opentelemetry-php/blob/main/docs/laravel-quickstart.md)
+  |
+  └── .gitkeep
+```
+
+>Reset paths for `database`, `config` and `resources` folders
+```php
+namespace App\Providers;
+
+use App\Models\User;
+use Features\FleetOperation\Models\Assignment;
+
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+
+// app/Providers/AppServiceProvider.php
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        // @HINT: Modify `database_path()`
+        $this->app->useDatabasePath(app_path('Core/database'));
+
+        // @HINT: Modify `config_path()`
+        $this->app->instance('path.config', app_path('Core/config'));
+
+        // @HINT: Modify resources_path()
+        $this->app->instance('path.resources', app_path('Core/resources'));
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Gate::define('view-assignment', function (User $user, Assignment $assignment) {
+          return $user->id === $assignment->rider_id || $user->isRider();
+        });
+        Gate::define('update-assignment', function (User $user, Assignment $assignment) {
+          return $user->id === $assignment->creator_id || $user->isSuper();
+        });
+        View::share('year', date('Y'));
+    }
+}
+```
+
+>Reset default autoloading configurations and run `$ composer dump-autoload`
+```json
+"autoload": {
+    "psr-4": {
+        "App\\": "app/",
+        "App\\Models": "app/Core/Shared/Models",
+        "App\\Http\\Middleware": "app/Core/Shared/Http/Middleware",
+        "App\\Http\\Controllers": "app/Core/Shared/Http/Controllers",
+        "App\\View\\Composers": "app/Core/Shared/Views/Composers",
+        "Features\\": "app/Features/",
+        "Database\\Factories\\": "app/Core/database/factories/",
+        "Database\\Seeders\\": "app/Core/database/seeders/"
+    }
+}
+```
+
+>Proper loading of `app/Features` files.
+```php
+namespace App\Core\Shared\Providers;
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+
+// app/Core/Shared/Providers/BusinessDomainServiceProvider.php
+
+public function boot()
+{
+    $modules = array_map('basename', File::directories(app_path('Features')));
+    $map = [
+      'fleetoperation' => 'fleet',
+      'fleetmaintenance' => 'maintenance',
+      'dispatchfulfillment' => 'dispatch',
+      'telemanticsaggregation' => 'telemantics'
+    ];
+
+    foreach ($modules as $module) {
+        $slug = Str::kebab($module);
+        
+        // @HINT: Load Routes (API)
+        if (File::exists(app_path("Features/{$module}/routes/api.php"))) {
+            Route::middleware('api')
+                ->prefix('api/v1/' . $map[Str::lower($module)])
+                ->group(app_path("Features/{$module}/routes/api.php"));
+        }
+
+        // @HINT: Load Routes (Web)
+        if (File::exists(app_path("Features/{$module}/routes/web.php"))) {
+            Route::middleware('web')
+                ->prefix('page')
+                ->name("{$slug}")
+                ->group(app_path("Features/{$module}/routes/web.php"));
+        }
+
+        // @HINT: Load Views 
+        if (File::isDirectory(app_path("Features/{$module}/views"))) {
+            $this->loadViewsFrom(app_path("Features/{$module}/views"), $slug);
+        }
+    }
+}
 ```
   
 ## Interaction Sequences
@@ -369,7 +521,7 @@ sequenceDiagram
     actor Manager as "Fleet Manager"
     participant API as "Gateway / HTTP API"
     participant FleetMod as "Fleet Operations Context"
-    participant TripMod as "Dispatch Context"
+    participant TripMod as "Dispatch Fulfillment Context"
     actor Rider as "Fleet Rider"
 
     Manager->>API: POST /api/v1/dispatch/trips?dispatch_request_id=xxx (Can assign Tricycle to a Rider on-demand or use existing queued assignments)
@@ -392,7 +544,7 @@ sequenceDiagram
     API-->>Rider: 200 OK (Trip In Progress)
 ```
 
->How a **Dispatch Request** is created
+>How a **Dispatch Request** is created by a **Customer**
 ```mermaid
 sequenceDiagram
     autonumber
@@ -406,13 +558,13 @@ sequenceDiagram
     TripMod-->>API: 201 Created (Request Saved)
 ```
 
->How a **Dispatch Request** is cancelled
+>How a **Dispatch Request** is cancelled by a **Customer**
 ```mermaid
 sequenceDiagram
     autonumber
     actor Customer as "Fleet Client"
     participant API as "Gateway / HTTP API"
-    participant TripMod as "Dispatch Context"
+    participant TripMod as "Dispatch Fulfillment Context"
 
 
     Customer->>API: PATCH /api/v1/dispatch/requests/{requestId}/status (Status is currently PENDING)
@@ -420,13 +572,13 @@ sequenceDiagram
     TripMod-->>API: 200 OK (Request Updated)
 ```
 
->How a **Maintenance Tech** handles an inspection service request
+>How an **Inspection Service Request** is created by a **Rider** and handled by a **Maintenance Technician**
 ```mermaid
 sequenceDiagram
     autonumber
     actor Tech as "Maintenance Technician"
     participant API as "Gateway / HTTP API"
-    participant OrderMod as "Maintenance Context"
+    participant OrderMod as "Fleet Maintenance Context"
     participant FleetMod as "Fleet Operations Context"
     actor Rider as "Fleet Rider"
 
@@ -440,9 +592,9 @@ sequenceDiagram
     OrderMod-->>API: 200 OK (List of Requests)
 
     Note over Tech: 🧺 PAUSE FOR OFFLINE CHORES 🧺
-    Note over Tech: • Perform Inspection
-    Note over Tech: • Recreate Defect Via Record Meta 
-    Note over Tech: • Flag Maintenance Defect
+    Note over Tech: • Go Through Each Inspection Request And Perform Inspection
+    Note over Tech: • Recreate Defect And Validate Against Inspection Request 
+    Note over Tech: • Flag Maintenance Defect And Prepare Work Order Details
     
     Tech->>API: POST /api/v1/maintenance/work-orders (Submit Work Order Record)
     API->>OrderMod: Save/Create Work Order Record And Await Approval (Status: PENDING)
