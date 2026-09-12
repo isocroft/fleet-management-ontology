@@ -1,1 +1,32 @@
+entity:
+  name: DispatchRequest
 
+  description: >
+    A dispatch request is received by a fleet manager or automatically by the system. A dispatch request is the basis for a trip.
+
+  properties:
+
+    id:
+      type: uuid
+      unique: true
+
+    pickup_location:
+      type: string
+      constraint: [REGEX: ]
+
+    dropoff_location:
+      type: string
+      constraint: [REGEX: ]
+
+    consignment_type:
+      type: ConsignmentType
+
+  relationships:
+
+    submitted_by:
+      target: Customer
+      cardinality: one
+
+    utilized_for:
+      target: Trip
+      cardinality: one
