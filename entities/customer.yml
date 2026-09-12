@@ -1,1 +1,32 @@
+entity:
+  name: Customer
 
+  description: >
+    A customer is a person that is served by a fleet company. Customer submits dispatch request via a form which allows for a trip to be scheduled.
+
+  properties:
+
+    id:
+      type: uuid
+      unique: true
+
+    registered_at:
+      type: datetime
+
+  relationships:
+
+    is:
+      target: Person
+      cardinality: one
+
+    confirms:
+      target: Trip 
+      cardinality: many
+
+    submits:
+      target: DisptachRequest
+      cardinality: many
+
+    served_by:
+      target: Company 
+      cardinality: zero..one
